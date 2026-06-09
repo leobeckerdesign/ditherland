@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DITHERLAND</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="/vendor/css/7e7d96b1e6991756.css" />
+  <link rel="stylesheet" href="/vendor/css/f071710226227de0.css" />
+  <link rel="stylesheet" href="/vendor/css/e1a75d95e944110d.css" />
+  <link rel="stylesheet" href="/vendor/css/85e4434e0e3115bb.css" />
+  <link rel="stylesheet" href="/vendor/css/48be48c7e7a7a80b.css" />
+  <link rel="stylesheet" href="/vendor/css/54b80051c96041ef.css" />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="./lbk-theme.css" />
+</head>
+<body class="bg-background text-foreground">
+  <div class="no-scrollbar bg-card/50 flex flex-col space-y-2 overflow-hidden p-2 select-none lg:h-screen lg:flex-row lg:space-y-0 lg:space-x-2">
+
+    <!-- LEFT PANEL -->
+    <div class="no-scrollbar border-border relative z-10 w-full shrink-0 grow-0 space-y-3 overflow-y-scroll rounded border p-2 lg:w-[360px]">
+
+      <!-- header: Leo Becker mark (nyos.leobecker.com /favicon.svg) + DITHERLAND wordmark -->
+      <div id="dl-header" class="text-primary border-border relative aspect-[16/4] w-full overflow-hidden rounded border">
+        <div class="bg-card absolute flex h-full w-full items-center gap-3 px-4">
+          <svg class="dl-logo shrink-0" width="32" height="32" viewBox="0 0 217 217" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M21.1457 21.1456C49.3406 -7.04843 167.248 -7.04863 195.443 21.1456C223.637 49.3399 223.637 167.248 195.443 195.442C167.248 223.637 49.3402 223.637 21.1457 195.442C-7.04858 167.248 -7.04858 49.3399 21.1457 21.1456ZM113.07 14.3097C42.5795 14.3226 14.2828 70.2109 14.2825 108.617C14.2825 120.557 16.4202 134.635 21.5647 145.309C24.9945 152.143 30.9838 160.244 37.4338 160.244C39.3663 160.244 42.1437 160.027 43.8586 155.125L47.928 144.234C50.7178 136.773 51.7805 133.561 51.7805 130.156C51.78 115.861 30.9836 110.306 30.9836 86.2081C30.9843 59.3334 66.5622 56.1339 88.2161 56.1339C113.299 56.1339 115.015 61.8927 115.015 67.8819C115.015 77.4803 101.308 81.5372 87.7932 81.5372C63.5673 81.5371 55.6447 75.9825 47.7229 75.9825C42.3741 75.9828 40.6585 78.7479 40.6584 85.7989C40.6584 102.218 55.4535 117.153 65.3078 117.153C79.0143 117.153 96.1768 103.076 129.4 103.076C149.338 103.076 156.402 112.892 156.403 131.884C156.403 158.555 136.029 185.648 94.884 185.649C70.2358 185.648 64.2328 177.969 64.2327 168.371C64.2328 160.488 67.6626 158.773 73.6643 158.773C82.6611 158.773 97.2514 164.327 111.38 164.327C127.889 164.327 143.963 156.008 143.963 132.114C143.963 118.037 136.464 113.763 125.522 113.763C90.3662 113.763 51.9852 131.04 52.2024 163.892C52.42 189.487 72.9992 202.925 109.857 202.925H109.869V202.912C162.174 202.912 202.898 166.221 202.898 116.719C202.898 90.9058 190.688 75.5479 161.727 75.5479C138.358 75.548 123.794 83.6493 90.9934 99.6593C89.9186 100.081 89.278 100.081 88.8557 99.0196C88.4337 97.9449 88.8561 97.3039 89.9309 96.6641C140.303 69.5711 159.372 60.3947 159.372 41.6202C159.372 26.6855 144.808 14.3097 113.07 14.3097Z" fill="#F05524"/>
+          </svg>
+          <span class="dl-title text-3xl font-extrabold uppercase">Ditherland</span>
+        </div>
+      </div>
+
+      <!-- tabs -->
+      <div role="tablist" class="items-center justify-center text-muted-foreground grid h-auto w-full grid-cols-3 gap-2">
+        <button id="tab-image" type="button" role="tab" data-state="active" class="inline-flex items-center justify-center whitespace-nowrap rounded py-1 font-medium ring-offset-background transition-all focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm vst-btn h-9 cursor-pointer px-2 text-sm">Imagem</button>
+        <button id="tab-video" type="button" role="tab" data-state="inactive" class="inline-flex items-center justify-center whitespace-nowrap rounded py-1 font-medium ring-offset-background transition-all focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm vst-btn h-9 cursor-pointer px-2 text-sm">Vídeo</button>
+        <button id="tab-gen" type="button" role="tab" data-state="inactive" class="inline-flex items-center justify-center whitespace-nowrap rounded py-1 font-medium ring-offset-background transition-all focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm vst-btn h-9 cursor-pointer px-2 text-sm">Gerador</button>
+      </div>
+
+      <!-- load / export -->
+      <div class="grid grid-cols-2 gap-2">
+        <button id="load" class="inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 vst-btn relative">
+          <input id="file" accept="image/*" class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" type="file" />
+          <div class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h20v20H2z"/><path d="m8 11.5l4-4l4 4m-4 6v-10"/></g></svg>
+            <span id="load-label">Carregar Imagem</span>
+          </div>
+        </button>
+        <button id="export" class="inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 vst-btn relative">
+          <div class="flex items-center justify-center gap-2 overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 12.5l4 4l4-4m-4 4v-10"/><path d="M2 2h20v20H2z"/></g></svg>
+            <span id="export-label">Baixar</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Gerador: Animação + Velocidade (visível só no modo Gerador) -->
+      <div id="gen-controls" style="display:none" class="space-y-3">
+        <div class="overflow-hidden rounded border">
+          <div class="flex items-center justify-between border-b p-2 text-sm">
+            <div class="flex items-center text-muted-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.5 6h-17v13h17zM12 19v3M2 2h20v4H2zM1 19h22"/><path d="M10.651 15.5v-6l4.072 3z"/></g></svg>
+              <span class="ml-2">Animação</span>
+            </div>
+          </div>
+          <div class="p-2">
+            <div id="anim-group" role="group" class="items-center justify-center flex gap-1 border border-border rounded-md p-1 bg-muted/20">
+              <button data-value="blobs" data-state="on" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">Blobs</button>
+              <button data-value="flicker" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">Cintilação</button>
+              <button data-value="slide" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">Deslizar</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-hidden rounded border">
+          <div class="flex items-center justify-between border-b p-2 text-sm">
+            <div class="flex items-center text-muted-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M21.168 19A10 10 0 0 0 22 15c0-5.523-4.477-10-10-10S2 9.477 2 15a10 10 0 0 0 .832 4zM12 19l5-7.5"/></svg>
+              <span class="ml-2">Velocidade</span>
+            </div>
+            <div class="flex items-center justify-end"><span class="text-primary/50" id="speed-o">30</span></div>
+          </div>
+          <div id="speed-mount"></div>
+        </div>
+      </div>
+
+      <!-- Algoritmo -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0"/><path d="M14.5 2h-5v2.398a8 8 0 0 0-2.831 1.637l-2.08-1.2l-2.5 4.33l2.078 1.2a8 8 0 0 0 0 3.27l-2.077 1.2l2.5 4.33l2.079-1.2a8 8 0 0 0 2.83 1.637V22h5v-2.398a8 8 0 0 0 2.832-1.637l2.08 1.2l2.5-4.33l-2.078-1.2a8 8 0 0 0 0-3.27l2.077-1.2l-2.5-4.33l-2.079 1.2A8 8 0 0 0 14.5 4.398z"/></g></svg>
+            <span class="ml-2">Algoritmo</span>
+          </div>
+        </div>
+        <div class="p-2">
+          <div id="algo-group" role="group" class="items-center justify-center flex gap-1 border border-border rounded-md p-1 bg-muted/20">
+            <button data-value="bayer" data-state="on" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-3 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">Bayer</button>
+            <button data-value="floyd" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-3 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">Floyd</button>
+            <button data-value="atkinson" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-3 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">Atkinson</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Textura -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 2h20v20H2zm0 8l8-8m4 0l8 8m-8 12l8-8M2 14l8 8"/></svg>
+            <span class="ml-2">Textura</span>
+          </div>
+          <button id="texture-toggle" data-state="off" title="Preenchimento pontilhado por banda (subdivide cada bloco; cresce com a Escala)" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-4 border border-border cursor-pointer text-sm rounded-sm vst-btn">Off</button>
+        </div>
+      </div>
+
+      <!-- Matriz Bayer -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L3 7l9 5l9-5z"/><path d="M2 11.545L12 17l10-5.455"/><path d="M22 16.545L12 22L2 16.545"/></g></svg>
+            <span class="ml-2">Nível</span>
+          </div>
+        </div>
+        <div class="p-2">
+          <div id="matrix-group" role="group" class="items-center justify-center flex gap-1 border border-border rounded-md p-1 bg-muted/20">
+            <button data-value="2" data-state="off" title="2×2" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">L1</button>
+            <button data-value="4" data-state="on" title="4×4" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">L2</button>
+            <button data-value="8" data-state="off" title="8×8" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">L3</button>
+            <button data-value="16" data-state="off" title="16×16" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">L4</button>
+            <button data-value="32" data-state="off" title="32×32" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-2 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">L5</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Níveis -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 8l6-6l6 6A8.485 8.485 0 1 1 6 8Z"/><path d="M12 19a5 5 0 0 1-5-5"/></g></svg>
+            <span class="ml-2">Cores</span>
+          </div>
+        </div>
+        <div class="p-2">
+          <div id="levels-group" role="group" class="items-center justify-center flex gap-1 border border-border rounded-md p-1 bg-muted/20">
+            <button data-value="2" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-3 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">2</button>
+            <button data-value="3" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-3 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">3</button>
+            <button data-value="4" data-state="on" class="dl-grpbtn inline-flex items-center justify-center font-medium hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-9 flex-1 px-3 border hover:border-border cursor-pointer py-2 text-sm rounded-sm transition-all duration-200 relative vst-btn">4</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paleta -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h8.5v15.75a4.25 4.25 0 0 1-8.5 0z"/><path d="m10.5 7l4-4l6 6l-10.38 10.38"/><path d="M6 22h16v-8.5h-6M2 8h8.5M2 14.5h8.5"/></g></svg>
+            <span class="ml-2">Paleta</span>
+          </div>
+        </div>
+        <div class="p-2">
+          <!-- preset dropdown (LBK + curated combos); per-color fine-tuning stays below -->
+          <div class="dl-preset">
+            <button id="preset-trigger" class="dl-preset-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="dl-preset-strip" id="preset-trigger-strip"></span>
+              <span class="dl-preset-name" id="preset-trigger-name">LBK</span>
+              <svg class="dl-preset-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3.5 6L8 10.5L12.5 6"/></svg>
+            </button>
+            <div id="preset-menu" class="dl-preset-menu" role="listbox" hidden></div>
+          </div>
+          <div class="dl-preset-caption">Ajuste fino</div>
+          <div id="palette" class="grid grid-cols-4 gap-1">
+            <input type="color" id="swatch0" class="dl-swatch" value="#00201C" />
+            <input type="color" id="swatch1" class="dl-swatch" value="#005C54" />
+            <input type="color" id="swatch2" class="dl-swatch" value="#F05524" />
+            <input type="color" id="swatch3" class="dl-swatch" value="#C4B597" />
+          </div>
+          <div id="alpha-row" style="display:none" class="grid grid-cols-4 gap-1 mt-2">
+            <button id="alpha0" data-state="on" title="Cor 1 transparente" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-2 border border-border cursor-pointer text-sm rounded-sm vst-btn">∅</button>
+            <button id="alpha1" data-state="off" title="Cor 2 transparente" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-2 border border-border cursor-pointer text-sm rounded-sm vst-btn">∅</button>
+            <button id="alpha2" data-state="off" title="Cor 3 transparente" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-2 border border-border cursor-pointer text-sm rounded-sm vst-btn">∅</button>
+            <button id="alpha3" data-state="off" title="Cor 4 transparente" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-2 border border-border cursor-pointer text-sm rounded-sm vst-btn">∅</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Curva de tons -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="square" d="M18.884 6.93c0 5.11-4.161 9.254-9.295 9.254"/><path stroke-linecap="round" d="M17.069 3.299H20.7V6.93h-3.631zM5.958 14.369h3.631V18H5.958z"/><path d="M2 9.925v-3.15m0 6.3v3.15m0 2.625V22h3.15m8.925 0h3.15m-6.3 0h-3.15M23 22h-3.15M2 1v3.15"/></g></svg>
+            <span class="ml-2">Curva de tons</span>
+          </div>
+          <button id="curve-reset" class="dl-link inline-flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19.5 1.5v4h-4"/><path d="M19.5 5.385A9.98 9.98 0 0 0 12 2C6.477 2 2 6.477 2 12a10 10 0 0 0 5.324 8.842m2.032.805c.843.23 1.729.353 2.644.353c1.3 0 2.544-.248 3.684-.7m1.586-.8a10.05 10.05 0 0 0 3.35-3.428M22 12a10 10 0 0 1-.577 3.356"/></g></svg>Reset</button>
+        </div>
+        <div class="p-2">
+          <canvas id="curve" class="dl-curve rounded border border-border" width="340" height="210"></canvas>
+          <div class="mt-1 text-[11px] text-muted-foreground opacity-70">Clique adiciona ponto · duplo-clique remove · arraste para moldar</div>
+        </div>
+      </div>
+
+      <!-- Brilho -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="m4.5 4.5l2 2m11 0l2-2m0 15l-2-2m-11 0l-2 2M12 1v3m0 16v3M1 12h3m16 0h3M8.5 12a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0"/></svg>
+            <span class="ml-2">Brilho</span>
+          </div>
+          <div class="flex items-center justify-end"><span class="text-primary/50" id="brightness-o">0</span></div>
+        </div>
+        <div id="brightness-mount"></div>
+      </div>
+
+      <!-- Contraste -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 6a4 4 0 1 0 8 0a4 4 0 1 0-8 0m12 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0M2 18a4 4 0 1 0 8 0a4 4 0 1 0-8 0m12 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0"/></svg>
+            <span class="ml-2">Contraste</span>
+          </div>
+          <div class="flex items-center justify-end"><span class="text-primary/50" id="contrast-o">0</span></div>
+        </div>
+        <div id="contrast-mount"></div>
+      </div>
+
+      <!-- Escala -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 9V2h7m5 12l8 8M2 2l8 8m12 5v7h-7M2 15v7h7m5-12l8-8M2 22l8-8m12-5V2h-7"/></svg>
+            <span class="ml-2">Escala</span>
+          </div>
+          <div class="flex items-center justify-end"><span class="text-primary/50" id="scale-o">10×</span></div>
+        </div>
+        <div id="scale-mount"></div>
+      </div>
+
+      <!-- Pontos de corte -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 6a4 4 0 1 0 8 0a4 4 0 1 0-8 0m0 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0m3.5-8l7.5 3.864M22 5.5L5.5 14M23 17h-4m-2 0h-4"/></svg>
+            <span class="ml-2">Pontos de corte</span>
+          </div>
+          <button id="cuts-auto" class="dl-link">Auto</button>
+        </div>
+        <div id="cuts" class="space-y-1"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: canvas stage -->
+    <div class="border-border bg-card relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden rounded border lg:min-h-0">
+      <canvas id="canvas" class="dl-canvas"></canvas>
+    </div>
+  </div>
+
+  <script type="module" src="./ditherland.js"></script>
+</body>
+</html>

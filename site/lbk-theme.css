@@ -1,0 +1,254 @@
+/* lbk-theme.css — LBK design-system look ported to the vanilla QuadTone.
+   Tokens from lbk-ds (github.com/leobeckerdesign/lbk-ds, src/theme.css), mapped onto
+   the mirror's shadcn HSL variables + a hand-built skeuomorphic relief. No React/Tailwind:
+   we only adopt the visual language. Loaded AFTER style.css so it wins.
+   Dark-terminal LBK: deep green #00110E, orange #F05524, bone #C4B597, sharp 0px corners. */
+
+/* ---- 1) Palette: recolor every shadcn utility. This mirror is shadcn on Tailwind v4 —
+   the vars hold FULL colors (oklch/hex), consumed as var(--color-x) → var(--x). So we
+   override with full hex (NOT hsl triplets). ---- */
+:root, .dark {
+  --background: #00110E;
+  --foreground: #C4B597;
+  --card: #00201C;
+  --card-foreground: #C4B597;
+  --popover: #00201C;
+  --popover-foreground: #C4B597;
+  --primary: #F05524;
+  --primary-foreground: #00110E;
+  --secondary: #002823;
+  --secondary-foreground: #C4B597;
+  --muted: #002823;
+  --muted-foreground: #9C8F76;
+  --accent: #F05524;
+  --accent-foreground: #00110E;
+  --destructive: #CC2200;
+  --destructive-foreground: #C4B597;
+  --border: #00453F;
+  --input: #00453F;
+  --ring: #F05524;
+  --radius: 0px;
+
+  /* raw LBK tokens for the relief */
+  --lbk-bg: #00110E; --lbk-surface: #00201C; --lbk-raised: #002823;
+  --lbk-border: #00453F; --lbk-orange: #F05524; --lbk-orange-light: #FF8036; --lbk-orange-dark: #8E3215;
+  --lbk-bone: #C4B597; --lbk-edge-light: #00564E; --lbk-edge-dark: #002B27; --lbk-well: #00110E;
+  /* button variants (lbk-ds src/ui/button.tsx — 2px mitered bevel: light top/left, dark bottom/right) */
+  --btn-teal-fill: #005C54; --btn-teal-light: #008B7F; --btn-teal-dark: #003631;
+  --btn-exec-fill: #F05524; --btn-exec-light: #FF8036; --btn-exec-dark: #8E3215;
+}
+
+/* ---- 2) Fonts (loaded via <link> in <head>; graceful mono fallback offline) ---- */
+body, .vst-btn, .dl-grpbtn, .dl-cutlabel { font-family: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace; }
+.dl-title { font-family: "Big Shoulders Display", sans-serif; letter-spacing: .01em; font-weight: 800; color: var(--lbk-bone); font-size: 21px; line-height: 1; }
+/* header block (logo + wordmark) shrunk ~30% proportionally: shorter card + tighter spacing */
+#dl-header { aspect-ratio: 16 / 2.8 !important; }
+#dl-header > div { gap: 8px !important; padding-left: 12px !important; padding-right: 12px !important; }
+
+/* ---- 3) Sharp corners (LBK motif); rounded-full (home button) stays round ---- */
+.dl-canvas, .dl-curve, .dl-swatch, .vst-btn, .dl-grpbtn,
+.slider-track, .slider-progress, .slider-handle,
+[role=tablist], [role=tablist] > button,
+.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl { border-radius: 0 !important; }
+
+/* ---- 4) Buttons — lbk-ds skeuomorphic recipe (2px mitered border bevel) ----
+   Source of truth: lbk-ds src/ui/button.tsx + src/theme.css. The relief is a 2px
+   SOLID BORDER (not box-shadow): light on top+left, dark on bottom+right = raised;
+   :active inverts it and nudges 1px = pressed. A variant swaps only 4 vars
+   (fill/text/light/dark), so hover/active stay generic. !important beats the purged
+   Tailwind utilities the mirror stamps on every button (bg-transparent / bg-accent /
+   hover:bg-muted…); variant changes ride on CSS vars, so no specificity wars. */
+.vst-btn, .dl-grpbtn {
+  /* OUTLINE (neutral / inactive) — the default variant */
+  --bfill: var(--btn-teal-fill);
+  --btext: var(--lbk-bone);
+  --bl: var(--btn-teal-light);
+  --bd: var(--btn-teal-dark);
+  background: var(--bfill) !important;
+  color: var(--btext) !important;
+  border: 2px solid !important;
+  border-color: var(--bl) var(--bd) var(--bd) var(--bl) !important; /* T R B L */
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;     /* kill the mirror's drop + glow on the label */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  font-size: .78rem;            /* uniform label size on every button */
+  padding: 0 8px;               /* uniform internal spacing on every button — Win95-snug */
+  transition: filter .1s ease, transform .1s ease, border-color .1s ease;
+}
+.vst-btn:hover, .dl-grpbtn:hover { filter: brightness(1.1); }
+.vst-btn:active, .dl-grpbtn:active {
+  transform: translate(1px, 1px);
+  border-color: var(--bd) var(--bl) var(--bl) var(--bd) !important; /* inverted = sunk */
+}
+/* EXEC (active / selected) — orange: swap the 4 vars, base rule repaints */
+.dl-grpbtn[data-state=on],
+#tab-image[data-state=active], #tab-video[data-state=active], #tab-gen[data-state=active] {
+  --bfill: var(--btn-exec-fill);
+  --btext: var(--lbk-bg);
+  --bl: var(--btn-exec-light);
+  --bd: var(--btn-exec-dark);
+}
+/* GHOST (text actions: Preset LBK / Auto / Reset) — flat, bone → orange on hover */
+.dl-link {
+  background: transparent; border: none; color: var(--lbk-bone);
+  transition: color .1s ease;
+}
+.dl-link:hover { color: var(--lbk-orange); }
+/* progress fill keeps the LBK orange */
+.slider-progress { background-color: var(--lbk-orange) !important; }
+
+/* ---- 4b) Textura toggle → lbk-ds Switch (src/ui/switch.tsx) ----
+   This binary On/Off is a Switch in the DS, not a button. Override the button look
+   (it carries .vst-btn/.dl-grpbtn) into a 48×24 track + sliding 16×16 knob. The track
+   is a RECESSED groove (T/L dark, B/R light); the knob is RAISED (T/L light, B/R dark);
+   inner travel = 40−16 = 24px. OFF = dark well, ON = orange. Label text is hidden
+   (the "Textura" label lives in the card header). JS still just flips data-state. */
+#texture-toggle {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block !important;
+  flex: none;
+  width: 48px !important;
+  height: 24px !important;
+  min-width: 48px;
+  padding: 2px !important;
+  background: var(--lbk-well) !important;          /* OFF: dark groove */
+  border: 2px solid !important;
+  border-color: var(--lbk-edge-dark) var(--lbk-edge-light)
+                var(--lbk-edge-light) var(--lbk-edge-dark) !important; /* recessed: T/L dark, B/R light */
+  border-radius: 0 !important;
+  font-size: 0 !important;                         /* hide "Off"/"On" text */
+  color: transparent !important;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+#texture-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  box-sizing: border-box;
+  background: var(--lbk-raised);                   /* knob face */
+  border: 2px solid;
+  border-color: var(--lbk-edge-light) var(--lbk-edge-dark)
+                var(--lbk-edge-dark) var(--lbk-edge-light); /* raised: T/L light, B/R dark */
+  transition: transform .15s ease;
+}
+#texture-toggle[data-state=on] { background: var(--lbk-orange) !important; } /* ON: orange */
+#texture-toggle[data-state=on]::after { transform: translateX(24px); }
+#texture-toggle:hover { filter: none; }            /* cancel button brightness hover */
+#texture-toggle:active { transform: none; }        /* cancel button press-nudge */
+#texture-toggle:focus-visible { outline: none; border-color: var(--lbk-orange) !important; }
+
+/* ---- 4c) Paleta preset dropdown — modeled on lbk-ds Select (src/ui/select.tsx) ----
+   Trigger = recessed input field (well bg, 2px recess bevel: dark top/left, light
+   bottom/right; orange border on open). Menu = recessed panel (same sunken bevel) with the
+   DS thin teal scrollbar. Options are full-bleed 4-color strips (name only as a tooltip). */
+.dl-preset { position: relative; margin-bottom: 8px; }
+.dl-preset-trigger {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 36px;
+  background: var(--lbk-well); color: var(--lbk-bone);
+  border: 2px solid; border-radius: 0;
+  border-color: var(--lbk-edge-dark) var(--lbk-edge-light) var(--lbk-edge-light) var(--lbk-edge-dark);
+  padding: 0 10px; cursor: pointer; font-family: inherit; font-size: 12px; line-height: 1;
+  transition: border-color .12s ease;
+}
+.dl-preset-trigger:hover, .dl-preset-trigger[aria-expanded=true] { border-color: var(--lbk-orange); }
+.dl-preset-name { flex: 1 1 auto; text-align: left; letter-spacing: .04em; }
+.dl-preset-chevron { width: 14px; height: 14px; flex: 0 0 auto; color: var(--muted-foreground); transition: transform .12s ease; }
+.dl-preset-trigger[aria-expanded=true] .dl-preset-chevron { transform: rotate(180deg); }
+.dl-preset-strip { display: flex; flex: 0 0 auto; width: 64px; height: 18px; }
+.dl-preset-trigger .dl-preset-strip { border: 1px solid rgba(0, 0, 0, .35); }
+.dl-preset-strip > i { flex: 1 1 0; display: block; }
+
+.dl-preset-menu {
+  /* fixed + JS-positioned from the trigger rect, so neither the card's overflow-hidden
+     nor the panel's overflow-y-scroll can clip it. left/top/width/max-height set on open. */
+  position: fixed; z-index: 50;
+  display: flex; flex-direction: column; gap: 2px; padding: 4px;
+  background: var(--lbk-surface);
+  border: 2px solid; /* recessed (DS Select content): dark top/left, light bottom/right */
+  border-color: var(--lbk-edge-dark) var(--lbk-edge-light) var(--lbk-edge-light) var(--lbk-edge-dark);
+  max-height: 264px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(0, 92, 84, .4) transparent; /* DS scrollbar (Firefox) */
+}
+.dl-preset-menu::-webkit-scrollbar { width: 4px; }
+.dl-preset-menu::-webkit-scrollbar-track { background: transparent; }
+.dl-preset-menu::-webkit-scrollbar-thumb { background: rgba(0, 92, 84, .4); border-radius: 0; }
+.dl-preset-menu::-webkit-scrollbar-thumb:hover { background: rgba(0, 92, 84, .6); }
+.dl-preset-menu[hidden] { display: none; }
+.dl-preset-opt {
+  display: block; width: 100%;
+  background: transparent; border: 2px solid transparent; border-radius: 0;
+  padding: 0; cursor: pointer;
+}
+.dl-preset-opt:hover { border-color: var(--lbk-edge-light); }
+.dl-preset-opt[aria-selected=true] { border-color: var(--lbk-orange); }
+.dl-preset-opt .dl-preset-strip { width: 100%; height: 26px; }
+.dl-preset-caption {
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted-foreground); margin-bottom: 4px;
+}
+
+/* ---- 5) Skeuomorphic relief ---- */
+/* control cards / panels — beveled raised surface */
+.overflow-hidden.rounded.border {
+  background: var(--lbk-surface);
+  box-shadow: inset 0 1px 0 var(--lbk-edge-light), inset 0 -1px 0 var(--lbk-edge-dark);
+}
+/* (buttons handled by the bevel system in section 4) */
+/* recessed well (tone-curve canvas) — sunken inset */
+.dl-curve {
+  background: var(--lbk-well) !important;
+  box-shadow: inset 0 2px 3px var(--lbk-edge-dark), inset 0 -1px 0 var(--lbk-edge-light);
+}
+/* Paleta fine-tune swatches — recessed chanfro (matches DS input/select): 2px sunk bevel
+   (dark top/left, light bottom/right), the color fills inside it, sharp corners. */
+.dl-swatch {
+  padding: 0 !important; border-radius: 0;
+  background: var(--lbk-well);
+  border: 2px solid;
+  border-color: var(--lbk-edge-dark) var(--lbk-edge-light) var(--lbk-edge-light) var(--lbk-edge-dark);
+  box-shadow: none;
+}
+.dl-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.dl-swatch::-webkit-color-swatch { border: 0; border-radius: 0; }
+.dl-swatch::-moz-color-swatch { border: 0; border-radius: 0; }
+/* ---- Sliders (Brilho/Contraste/Escala/Velocidade/Pontos de corte) — Win98 skeuo trackbar:
+   recessed groove (container) + raised orange fill + raised knob at the leading edge. ---- */
+.slider-track-container {
+  background: var(--lbk-well) !important;
+  border: 2px solid !important;
+  border-color: var(--lbk-edge-dark) var(--lbk-edge-light) var(--lbk-edge-light) var(--lbk-edge-dark) !important; /* recessed groove */
+  border-radius: 0 !important; padding: 2px !important;
+}
+.slider-track { background: transparent !important; box-shadow: none !important; overflow: visible !important; }
+.slider-progress {
+  box-shadow: inset 0 1px 0 var(--lbk-orange-light), inset 0 -1px 0 var(--lbk-orange-dark) !important; /* raised orange bar */
+  overflow: visible !important;
+}
+.slider-handle {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 12px; z-index: 3;
+  transform: translateX(50%);                     /* centered on the fill's leading edge */
+  background: var(--lbk-raised);
+  border: 2px solid;
+  border-color: var(--lbk-edge-light) var(--lbk-edge-dark) var(--lbk-edge-dark) var(--lbk-edge-light); /* raised knob */
+  box-shadow: none;
+}
+
+/* ---- Panel/section titles → uppercase (DS) ---- */
+.text-muted-foreground > span.ml-2 { text-transform: uppercase; letter-spacing: .05em; }
+/* cut-point labels line up with the slider groove now that #cuts has no extra padding */
+.dl-cutlabel { padding-left: 8px; }
+
+/* disabled control panel (DS disabled = 40% + no interaction) — used for Nível in video/gen */
+.dl-disabled { opacity: .4; pointer-events: none; }
+
+/* ---- 6) Canvas backdrop + selection + body safety net ---- */
+body { background-color: var(--lbk-bg) !important; color: var(--lbk-bone); }
+.dl-canvas { background: var(--lbk-bg); }
+::selection { background: rgba(240, 85, 36, .3); color: #00110E; }

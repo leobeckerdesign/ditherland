@@ -1,0 +1,13 @@
+{
+  "name": "ditherland",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "itest:image": "node test/integration/image.mjs",
+    "itest:video": "node test/integration/video.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23"
+  }
+}
