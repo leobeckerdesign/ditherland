@@ -1,0 +1,8 @@
+node_modules
+test
+.git
+*.md
+serve.py
+start.bat
+package.json
+package-lock.json

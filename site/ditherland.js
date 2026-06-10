@@ -2,6 +2,7 @@ import { ditherImageData, buildPalette } from './dither.js';
 import { buildCurveLUT } from './curve.js';
 import { field as genFieldRaw } from './noise.js';
 import { renderTextured, TILE as TEX_TILE } from './texture.js';
+import { validateUploadSize } from './limits.js';
 
 const LBK_RAMP = ['#00201C', '#005C54', '#F05524', '#C4B597']; // bege (#C4B597) é a cor mais clara → última banda
 // Curated 4-color palettes (LBK + combos). Each is sorted dark→light by luminance so the
@@ -297,7 +298,7 @@ function setupPresets() {
 // ---- media loading ----
 function loadImage(file) {
   const img = new Image();
-  img.onload = () => { imgSource = img; if (mediaType === 'image') { source = img; renderFrame(); } };
+  img.onload = () => { URL.revokeObjectURL(img.src); imgSource = img; if (mediaType === 'image') { source = img; renderFrame(); } };
   img.src = URL.createObjectURL(file);
 }
 function loadBackground(file) {
@@ -316,7 +317,11 @@ function videoLoop() {
 function loadVideo(file) {
   const v = document.createElement('video');
   v.muted = true; v.loop = true; v.playsInline = true;
-  v.onloadeddata = () => { vidSource = v; if (mediaType === 'video') { source = v; v.play().then(() => videoLoop()).catch(() => videoLoop()); } };
+  v.onloadeddata = () => {
+    // o vídeo precisa do blob URL enquanto toca; só dá pra revogar o do vídeo anterior
+    if (vidSource && vidSource.src.startsWith('blob:')) URL.revokeObjectURL(vidSource.src);
+    vidSource = v; if (mediaType === 'video') { source = v; v.play().then(() => videoLoop()).catch(() => videoLoop()); }
+  };
   v.src = URL.createObjectURL(file);
 }
 
@@ -399,6 +404,8 @@ $('curve-reset').addEventListener('click', () => { curvePoints = [{ x: 0, y: 0 }
 function wire() {
   $('file').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
+    const size = validateUploadSize(f.size);
+    if (!size.ok) { alert(size.message); e.target.value = ''; return; }
     if (mediaType === 'gen') loadBackground(f);
     else if (mediaType === 'video') loadVideo(f);
     else loadImage(f);
