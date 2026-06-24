@@ -105,7 +105,7 @@ function readThresholds(levels) {
   return cutSliders.map(s => s.value / 100).sort((a, b) => a - b);
 }
 function readAlphaForBand(levels) {
-  if (mediaType !== 'gen') return undefined;
+  if (mediaType !== 'gen' && mediaType !== 'video') return undefined;
   const arr = [];
   for (let i = 0; i < levels; i++) {
     const btn = $('alpha' + i);
@@ -150,6 +150,8 @@ function renderFrame() {
   display.width = sw; display.height = sh;
   dctx.imageSmoothingEnabled = false;
   dctx.clearRect(0, 0, sw, sh);
+  // no modo Vídeo, o fundo carregado fica atrás — aparece pelas bandas transparentes (∅) do vídeo ditherizado
+  if (mediaType === 'video' && bgImage) dctx.drawImage(bgImage, 0, 0, sw, sh);
   if (textureOn()) {
     const block = textureBlock(scale);
     const out = imgDither(Math.max(1, Math.ceil(sw / block)), Math.max(1, Math.ceil(sh / block)));
@@ -303,7 +305,7 @@ function loadImage(file) {
 }
 function loadBackground(file) {
   const img = new Image();
-  img.onload = () => { bgImage = img; URL.revokeObjectURL(img.src); renderGen(); };
+  img.onload = () => { bgImage = img; URL.revokeObjectURL(img.src); triggerRender(); };
   img.src = URL.createObjectURL(file);
 }
 
@@ -410,6 +412,15 @@ function wire() {
     else if (mediaType === 'video') loadVideo(f);
     else loadImage(f);
   });
+  // input de fundo dedicado do modo Vídeo (separado do #file, que carrega o vídeo)
+  $('bg-file').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    const size = validateUploadSize(f.size);
+    if (!size.ok) { alert(size.message); e.target.value = ''; return; }
+    loadBackground(f);
+    e.target.value = ''; // permite recarregar o mesmo arquivo
+  });
+  $('clear-bg').addEventListener('click', () => { bgImage = null; triggerRender(); });
   $('export').addEventListener('click', exportOutput);
   setupPresets();
 
@@ -417,7 +428,9 @@ function wire() {
     document.querySelectorAll('#tab-image,#tab-video,#tab-gen').forEach(x => x.setAttribute('data-state', x === b ? 'active' : 'inactive'));
     mediaType = b.id === 'tab-video' ? 'video' : b.id === 'tab-gen' ? 'gen' : 'image';
     const gc = $('gen-controls'); if (gc) gc.style.display = mediaType === 'gen' ? '' : 'none';
-    const ar = $('alpha-row'); if (ar) ar.style.display = mediaType === 'gen' ? '' : 'none';
+    // bandas transparentes (∅) e o carregador de fundo valem pro Gerador E pro Vídeo
+    const ar = $('alpha-row'); if (ar) ar.style.display = (mediaType === 'gen' || mediaType === 'video') ? '' : 'none';
+    const vbg = $('video-bg-controls'); if (vbg) vbg.style.display = mediaType === 'video' ? '' : 'none';
     // Nível (Bayer matrix) is imperceptible as a live control on moving video / animated gen,
     // so lock that block off there; it stays active in image mode.
     const nivelCard = $('matrix-group').closest('.overflow-hidden');
@@ -438,6 +451,7 @@ function wire() {
       $('file').accept = 'video/*';
       $('load-label').textContent = 'Carregar Vídeo';
       $('export-label').textContent = 'Exportar';
+      syncPaletteVisibility(); // alinha os botões ∅ ao número de Cores ativo
       if (vidSource) { source = vidSource; vidSource.play().then(() => videoLoop()).catch(() => videoLoop()); }
       else if (!videoDefaulted) {                       // first video entry: load the sample once
         videoDefaulted = true;
@@ -471,7 +485,7 @@ function wire() {
   for (let i = 0; i < 4; i++) $('alpha' + i).addEventListener('click', e => {
     const btn = e.currentTarget;
     btn.setAttribute('data-state', btn.getAttribute('data-state') === 'on' ? 'off' : 'on');
-    if (mediaType === 'gen') renderGen();
+    triggerRender(); // re-renderiza no Gerador e no Vídeo
   });
 
   $('texture-toggle').addEventListener('click', e => {
@@ -511,6 +525,17 @@ window.__ditherland.loadVideoFromUrl = url => {
   v.muted = true; v.loop = true; v.playsInline = true; v.crossOrigin = 'anonymous';
   v.onloadeddata = () => { mediaType = 'video'; vidSource = v; source = v; v.play().then(() => videoLoop()).catch(() => videoLoop()); };
   v.src = url;
+};
+// hooks do fundo no modo Vídeo (deterministas: pausa o vídeo p/ amostragem estável)
+window.__ditherland.video = {
+  pause: () => { if (vidSource) vidSource.pause(); },
+  loadBgFromUrl: url => new Promise(res => {
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => { bgImage = img; triggerRender(); res(true); };
+    img.src = url;
+  }),
+  clearBg: () => { bgImage = null; triggerRender(); },
+  setAlpha: (i, on) => { const b = $('alpha' + i); if (b) { b.setAttribute('data-state', on ? 'on' : 'off'); triggerRender(); } },
 };
 window.__ditherland.recordMs = ms => new Promise(resolve => {
   const stream = display.captureStream(30);

@@ -60,6 +60,23 @@
         </button>
       </div>
 
+      <!-- Vídeo: carregar um fundo pra compor atrás do vídeo ditherizado (transparência por banda ∅, igual ao Gerador). Visível só no modo Vídeo. -->
+      <div id="video-bg-controls" style="display:none" class="grid grid-cols-2 gap-2">
+        <button id="load-bg" class="inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 vst-btn relative">
+          <input id="bg-file" accept="image/*" class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" type="file" />
+          <div class="flex cursor-pointer items-center justify-center gap-2 overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h20v20H2z"/><path d="m5 17l4.5-5l3 3.5L16 11l3 6"/><circle cx="8" cy="8" r="1.5"/></g></svg>
+            <span>Carregar fundo</span>
+          </div>
+        </button>
+        <button id="clear-bg" class="inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 vst-btn relative">
+          <div class="flex items-center justify-center gap-2 overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h20v20H2z"/><path d="m8 8l8 8m0-8l-8 8"/></g></svg>
+            <span>Remover fundo</span>
+          </div>
+        </button>
+      </div>
+
       <!-- Gerador: Animação + Velocidade (visível só no modo Gerador) -->
       <div id="gen-controls" style="display:none" class="space-y-3">
         <div class="overflow-hidden rounded border">
