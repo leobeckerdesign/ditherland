@@ -3,6 +3,8 @@ import { buildCurveLUT } from './curve.js';
 import { field as genFieldRaw } from './noise.js';
 import { renderTextured, TILE as TEX_TILE } from './texture.js';
 import { validateUploadSize } from './limits.js';
+import { outputSize } from './resolution.js';
+import { isMp4Supported, createMp4Recorder } from './mp4.js';
 
 const LBK_RAMP = ['#00201C', '#005C54', '#F05524', '#C4B597']; // bege (#C4B597) é a cor mais clara → última banda
 // Curated 4-color palettes (LBK + combos). Each is sorted dark→light by luminance so the
@@ -43,7 +45,8 @@ let mediaType = 'image';
 let source = null;            // active element renderFrame reads (points at imgSource or vidSource)
 let imgSource = null, vidSource = null; // kept per-mode so the image isn't lost when a video loads
 let rafId = 0;
-let recorder = null, recChunks = [];
+let capturer = null;         // active export capture session (mp4 or webm) or null
+let exportPreparing = false; // guards the async start of a capture
 let curvePoints = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
 let curveLUT = buildCurveLUT(curvePoints);
 const S = {};                 // named custom sliders (brightness/contrast/scale)
@@ -78,6 +81,7 @@ function createSlider(mount, { min, max, value, step = 1, fmt = v => v, valueEl,
   return api;
 }
 function activeVal(groupId) { return document.querySelector('#' + groupId + ' [data-state=on]')?.dataset.value; }
+function outRes() { return activeVal('res-group') || 'native'; } // 'native' | '2k' | '4k'
 function wireGroup(groupId, onChange) {
   document.querySelectorAll('#' + groupId + ' button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('#' + groupId + ' button').forEach(x => x.setAttribute('data-state', 'off'));
@@ -146,24 +150,27 @@ function renderFrame() {
   if (!source) return;
   const [sw, sh] = sourceSize();
   if (!sw || !sh) return;
+  // Saída = tamanho da fonte (Nativo) ou 2K/4K com aspect preservado. O grid de dither
+  // continua derivado da FONTE + escala: o padrão não muda, só o raster final cresce.
+  const [ow, oh] = outputSize(sw, sh, outRes());
   const scale = Math.max(1, S.scale ? S.scale.value : 2);
-  display.width = sw; display.height = sh;
+  display.width = ow; display.height = oh;
   dctx.imageSmoothingEnabled = false;
-  dctx.clearRect(0, 0, sw, sh);
+  dctx.clearRect(0, 0, ow, oh);
   // no modo Vídeo, o fundo carregado fica atrás — aparece pelas bandas transparentes (∅) do vídeo ditherizado
-  if (mediaType === 'video' && bgImage) dctx.drawImage(bgImage, 0, 0, sw, sh);
+  if (mediaType === 'video' && bgImage) dctx.drawImage(bgImage, 0, 0, ow, oh);
   if (textureOn()) {
     const block = textureBlock(scale);
     const out = imgDither(Math.max(1, Math.ceil(sw / block)), Math.max(1, Math.ceil(sh / block)));
     const tex = renderTextured(out, block, currentLevels());
     off.width = tex.width; off.height = tex.height;
     octx.putImageData(new ImageData(tex.data, tex.width, tex.height), 0, 0);
-    dctx.drawImage(off, 0, 0);
+    dctx.drawImage(off, 0, 0, tex.width, tex.height, 0, 0, ow, oh);
   } else {
     const w = Math.max(1, Math.round(sw / scale)), h = Math.max(1, Math.round(sh / scale));
     const out = imgDither(w, h);
     octx.putImageData(new ImageData(out.data, w, h), 0, 0);
-    dctx.drawImage(off, 0, 0, w, h, 0, 0, sw, sh);
+    dctx.drawImage(off, 0, 0, w, h, 0, 0, ow, oh);
   }
 }
 
@@ -182,24 +189,25 @@ function genDither(w, h) {
 }
 function renderGen() {
   const [W, H] = genSize();
+  const [ow, oh] = outputSize(W, H, outRes());
   const scale = Math.max(1, S.scale ? S.scale.value : 2);
-  display.width = W; display.height = H;
+  display.width = ow; display.height = oh;
   dctx.imageSmoothingEnabled = false;
-  dctx.clearRect(0, 0, W, H);
-  if (bgImage) dctx.drawImage(bgImage, 0, 0, W, H);
+  dctx.clearRect(0, 0, ow, oh);
+  if (bgImage) dctx.drawImage(bgImage, 0, 0, ow, oh);
   if (textureOn()) {
     const block = textureBlock(scale);
     const out = genDither(Math.max(1, Math.ceil(W / block)), Math.max(1, Math.ceil(H / block)));
     const tex = renderTextured(out, block, currentLevels());
     off.width = tex.width; off.height = tex.height;
     octx.putImageData(new ImageData(tex.data, tex.width, tex.height), 0, 0);
-    dctx.drawImage(off, 0, 0);
+    dctx.drawImage(off, 0, 0, tex.width, tex.height, 0, 0, ow, oh);
   } else {
     const w = Math.max(1, Math.round(W / scale)), h = Math.max(1, Math.round(H / scale));
     const out = genDither(w, h);
     off.width = w; off.height = h;
     octx.putImageData(new ImageData(out.data, w, h), 0, 0);
-    dctx.drawImage(off, 0, 0, w, h, 0, 0, W, H);
+    dctx.drawImage(off, 0, 0, w, h, 0, 0, ow, oh);
   }
 }
 function triggerRender() { if (mediaType === 'gen') renderGen(); else renderFrame(); }
@@ -207,6 +215,7 @@ function genLoop() {
   if (mediaType !== 'gen') { genRaf = 0; return; }
   genTime += 0.05;
   renderGen();
+  if (capturer && capturer.active) capturer.grab();
   genRaf = requestAnimationFrame(genLoop);
 }
 
@@ -311,6 +320,7 @@ function loadBackground(file) {
 
 function videoLoop() {
   renderFrame();
+  if (capturer && capturer.active) capturer.grab();
   if (mediaType === 'video' && source && !source.paused && !source.ended) {
     if (source.requestVideoFrameCallback) source.requestVideoFrameCallback(videoLoop);
     else rafId = requestAnimationFrame(videoLoop);
@@ -327,25 +337,110 @@ function loadVideo(file) {
   v.src = URL.createObjectURL(file);
 }
 
-function exportOutput() {
+const EXPORT_FPS = 30;
+function exportBaseName() { return mediaType === 'gen' ? 'ditherland-gen' : 'ditherland'; }
+
+async function exportOutput() {
   if (mediaType === 'image') {
     if (!source) return;
     display.toBlob(b => downloadBlob(b, 'ditherland.png'), 'image/png');
     return;
   }
-  // video OR gen → record a WebM of the composite canvas
-  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
-  const stream = display.captureStream(30);
-  recChunks = [];
-  recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-  recorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
-  recorder.onstop = () => {
-    downloadBlob(new Blob(recChunks, { type: 'video/webm' }), mediaType === 'gen' ? 'ditherland-gen.webm' : 'ditherland.webm');
-    $('export-label').textContent = 'Exportar';
-  };
-  recorder.start();
-  $('export-label').textContent = 'Parar e salvar';
+  // video OR gen → capture the composite canvas
+  if (capturer) {                       // 2nd click = stop & save
+    if (!capturer.active) return;       // already finishing
+    const { blob, filename } = await capturer.stop();
+    if (blob) downloadBlob(blob, filename);
+    return;
+  }
+  if (exportPreparing) return;
+  exportPreparing = true;
+  try { await beginCapture(); } finally { exportPreparing = false; }
 }
+
+// Starts a capture session (MP4 via WebCodecs, else WebM fallback) and wires it into the
+// render loops. Frames are pulled by capturer.grab() from videoLoop/genLoop.
+async function beginCapture() {
+  if (capturer) return capturer;
+  const [sw, sh] = (mediaType === 'gen') ? genSize() : sourceSize();
+  if (!sw || !sh) return null;
+  const [ow, oh] = outputSize(sw, sh, outRes());
+  const restLabel = $('export-label').textContent;
+  const baseName = exportBaseName(); // fixed at start so a mid-capture tab switch can't rename the file
+
+  let cap = null;
+  if (await isMp4Supported({ width: ow, height: oh, fps: EXPORT_FPS })) {
+    try {
+      const rec = await createMp4Recorder({ width: ow, height: oh, fps: EXPORT_FPS });
+      if (ow - rec.width > 2 || oh - rec.height > 2) notifyResized(rec.width, rec.height); // H.264 area cap (ex.: 4K quadrado)
+      const capCanvas = document.createElement('canvas');
+      capCanvas.width = rec.width; capCanvas.height = rec.height;
+      const capCtx = capCanvas.getContext('2d'); capCtx.imageSmoothingEnabled = false;
+      cap = {
+        active: true, engine: 'mp4', width: rec.width, height: rec.height,
+        t0: performance.now(), lastGrab: -1e9, err: null,
+        grab() {
+          if (!this.active || this.err) return;
+          const now = performance.now();
+          if (now - this.lastGrab < 1000 / EXPORT_FPS - 2) return; // throttle to target fps
+          this.lastGrab = now;
+          try {
+            capCtx.drawImage(display, 0, 0, rec.width, rec.height); // fixed size → constant H.264 dims
+            rec.addFrame(capCanvas, (now - this.t0) * 1000);        // µs
+          } catch (e) { this.err = e; }
+        },
+        async stop() {
+          this.active = false;
+          $('export-label').textContent = 'Salvando…';
+          let blob = null;
+          try { blob = await rec.finish(); } catch (e) { this.err = e; }
+          capturer = null;
+          $('export-label').textContent = restLabel;
+          if (!blob) showExportNote('Falha ao gerar o MP4. Tente novamente.');
+          return { blob, filename: baseName + '.mp4', engine: 'mp4' };
+        },
+      };
+    } catch { cap = null; }
+  }
+  if (!cap) cap = makeWebmCapturer(restLabel, baseName); // unsupported or mp4 setup failed
+  capturer = cap;
+  $('export-label').textContent = 'Parar e salvar';
+  return cap;
+}
+
+// Fallback: MediaRecorder/WebM. captureStream feeds frames automatically, so grab() is a no-op.
+function makeWebmCapturer(restLabel, baseName) {
+  const stream = display.captureStream(EXPORT_FPS);
+  const chunks = [];
+  const rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  let resolveStop;
+  rec.onstop = () => {
+    capturer = null;
+    $('export-label').textContent = restLabel;
+    resolveStop({ blob: new Blob(chunks, { type: 'video/webm' }), filename: baseName + '.webm', engine: 'webm' });
+  };
+  rec.start();
+  notifyWebmFallback();
+  return {
+    active: true, engine: 'webm', grab() {},
+    stop() {
+      this.active = false;
+      $('export-label').textContent = 'Salvando…';
+      return new Promise(r => { resolveStop = r; rec.stop(); });
+    },
+  };
+}
+
+function showExportNote(msg) {
+  const n = $('export-note'); if (!n) return;
+  n.textContent = msg;
+  n.style.display = '';
+  clearTimeout(showExportNote._t);
+  showExportNote._t = setTimeout(() => { n.style.display = 'none'; }, 6000);
+}
+function notifyWebmFallback() { showExportNote('Seu navegador não suporta MP4 — salvamos em WebM.'); }
+function notifyResized(w, h) { showExportNote(`Resolução ajustada para ${w}×${h} (limite do MP4/H.264).`); }
 function downloadBlob(blob, name) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = name; a.click();
@@ -474,6 +569,7 @@ function wire() {
   wireGroup('matrix-group', triggerRender);
   wireGroup('levels-group', () => { syncPaletteVisibility(); buildCutSliders(); renderPresetMenu(); detectSelected(); triggerRender(); });
   wireGroup('anim-group', () => { if (mediaType === 'gen') renderGen(); });
+  wireGroup('res-group', triggerRender); // Nativo | 2K | 4K — re-render no novo tamanho de saída
 
   S.brightness = createSlider($('brightness-mount'), { min: -100, max: 100, value: 0, valueEl: $('brightness-o'), onInput: triggerRender });
   S.contrast = createSlider($('contrast-mount'), { min: -100, max: 100, value: 0, valueEl: $('contrast-o'), onInput: triggerRender });
@@ -536,6 +632,23 @@ window.__ditherland.video = {
   }),
   clearBg: () => { bgImage = null; triggerRender(); },
   setAlpha: (i, on) => { const b = $('alpha' + i); if (b) { b.setAttribute('data-state', on ? 'on' : 'off'); triggerRender(); } },
+};
+window.__ditherland.displaySize = () => [display.width, display.height];
+window.__ditherland.setOutRes = mode => {
+  document.querySelectorAll('#res-group button').forEach(x => x.setAttribute('data-state', x.dataset.value === mode ? 'on' : 'off'));
+  triggerRender();
+};
+// drives the real export pipeline (mp4 or webm) for ms and returns the blob's shape, no download.
+// wantBytes=true also returns the raw bytes (Array) for on-disk verification (ffprobe etc.).
+window.__ditherland.captureMs = async (ms, wantBytes = false) => {
+  const cap = await beginCapture();
+  if (!cap) return { engine: 'none', type: '', size: 0, width: 0, height: 0 };
+  const engine = cap.engine, width = cap.width || display.width, height = cap.height || display.height;
+  await new Promise(r => setTimeout(r, ms));
+  const { blob } = await cap.stop();
+  const out = { engine, type: blob ? blob.type : '', size: blob ? blob.size : 0, width, height };
+  if (wantBytes && blob) out.bytes = Array.from(new Uint8Array(await blob.arrayBuffer()));
+  return out;
 };
 window.__ditherland.recordMs = ms => new Promise(resolve => {
   const stream = display.captureStream(30);
