@@ -2,7 +2,7 @@
 // Pure helpers (evenDims / chooseBitrate) are unit-tested in node; the recorder needs a
 // browser with WebCodecs. isMp4Supported() degrades gracefully where WebCodecs is absent
 // (node, Safari <=16, Firefox <130) so the caller can fall back to WebM.
-import { Muxer, ArrayBufferTarget } from './vendor/mp4-muxer.mjs';
+import { Muxer, ArrayBufferTarget } from './vendor/mp4-muxer.js';
 
 // High → Main → Baseline; first one the browser accepts for the given size wins.
 const CODECS = ['avc1.640028', 'avc1.4d0028', 'avc1.42E01F'];
