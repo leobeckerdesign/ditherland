@@ -56,6 +56,15 @@ const capG = await page.evaluate(() => window.__ditherland.captureMs(1200));
 check(capG.size > 0, `gen capture empty: ${JSON.stringify(capG)}`);
 check(capG.type === (capG.engine === 'mp4' ? 'video/mp4' : 'video/webm'), `gen type/engine mismatch: ${JSON.stringify(capG)}`);
 
+// 4K gen (square) must still yield a real file — never dead-end at size 0 ("Falha ao gerar o MP4").
+// The encoder negotiation must land on a size it can actually encode.
+await page.evaluate(() => window.__ditherland.setOutRes('4k'));
+await sleep(400);
+const capG4k = await page.evaluate(() => window.__ditherland.captureMs(1200));
+check(capG4k.size > 0, `gen 4k capture DEAD-ENDED (size 0): ${JSON.stringify(capG4k)}`);
+check(['mp4', 'webm'].includes(capG4k.engine), `gen 4k unexpected engine: ${capG4k.engine}`);
+check(capG4k.type === (capG4k.engine === 'mp4' ? 'video/mp4' : 'video/webm'), `gen 4k type/engine mismatch: ${JSON.stringify(capG4k)}`);
+
 await browser.close();
 check(errors.length === 0, `pageerrors: ${JSON.stringify(errors)}`);
 

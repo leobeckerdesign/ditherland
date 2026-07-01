@@ -4,7 +4,7 @@ import { field as genFieldRaw } from './noise.js';
 import { renderTextured, TILE as TEX_TILE } from './texture.js';
 import { validateUploadSize } from './limits.js';
 import { outputSize } from './resolution.js';
-import { isMp4Supported, createMp4Recorder } from './mp4.js';
+import { createMp4Recorder } from './mp4.js';
 
 const LBK_RAMP = ['#00201C', '#005C54', '#F05524', '#C4B597']; // bege (#C4B597) é a cor mais clara → última banda
 // Curated 4-color palettes (LBK + combos). Each is sorted dark→light by luminance so the
@@ -368,41 +368,42 @@ async function beginCapture() {
   const restLabel = $('export-label').textContent;
   const baseName = exportBaseName(); // fixed at start so a mid-capture tab switch can't rename the file
 
+  // Try MP4 first. createMp4Recorder negotiates a size the encoder can REALLY encode
+  // (real 1-frame test, not just isConfigSupported) → the chosen config won't dead-end at
+  // finish(). If nothing encodes (or WebCodecs is absent) it throws → WebM fallback.
   let cap = null;
-  if (await isMp4Supported({ width: ow, height: oh, fps: EXPORT_FPS })) {
-    try {
-      const rec = await createMp4Recorder({ width: ow, height: oh, fps: EXPORT_FPS });
-      if (ow - rec.width > 2 || oh - rec.height > 2) notifyResized(rec.width, rec.height); // H.264 area cap (ex.: 4K quadrado)
-      const capCanvas = document.createElement('canvas');
-      capCanvas.width = rec.width; capCanvas.height = rec.height;
-      const capCtx = capCanvas.getContext('2d'); capCtx.imageSmoothingEnabled = false;
-      cap = {
-        active: true, engine: 'mp4', width: rec.width, height: rec.height,
-        t0: performance.now(), lastGrab: -1e9, err: null,
-        grab() {
-          if (!this.active || this.err) return;
-          const now = performance.now();
-          if (now - this.lastGrab < 1000 / EXPORT_FPS - 2) return; // throttle to target fps
-          this.lastGrab = now;
-          try {
-            capCtx.drawImage(display, 0, 0, rec.width, rec.height); // fixed size → constant H.264 dims
-            rec.addFrame(capCanvas, (now - this.t0) * 1000);        // µs
-          } catch (e) { this.err = e; }
-        },
-        async stop() {
-          this.active = false;
-          $('export-label').textContent = 'Salvando…';
-          let blob = null;
-          try { blob = await rec.finish(); } catch (e) { this.err = e; }
-          capturer = null;
-          $('export-label').textContent = restLabel;
-          if (!blob) showExportNote('Falha ao gerar o MP4. Tente novamente.');
-          return { blob, filename: baseName + '.mp4', engine: 'mp4' };
-        },
-      };
-    } catch { cap = null; }
-  }
-  if (!cap) cap = makeWebmCapturer(restLabel, baseName); // unsupported or mp4 setup failed
+  try {
+    const rec = await createMp4Recorder({ width: ow, height: oh, fps: EXPORT_FPS });
+    if (ow - rec.width > 2 || oh - rec.height > 2) notifyResized(rec.width, rec.height); // encoder cap (ex.: 4K quadrado no H.264)
+    const capCanvas = document.createElement('canvas');
+    capCanvas.width = rec.width; capCanvas.height = rec.height;
+    const capCtx = capCanvas.getContext('2d'); capCtx.imageSmoothingEnabled = false;
+    cap = {
+      active: true, engine: 'mp4', width: rec.width, height: rec.height,
+      t0: performance.now(), lastGrab: -1e9, err: null,
+      grab() {
+        if (!this.active || this.err) return;
+        const now = performance.now();
+        if (now - this.lastGrab < 1000 / EXPORT_FPS - 2) return; // throttle to target fps
+        this.lastGrab = now;
+        try {
+          capCtx.drawImage(display, 0, 0, rec.width, rec.height); // fixed size → constant H.264 dims
+          rec.addFrame(capCanvas, (now - this.t0) * 1000);        // µs
+        } catch (e) { this.err = e; }
+      },
+      async stop() {
+        this.active = false;
+        $('export-label').textContent = 'Salvando…';
+        let blob = null;
+        try { blob = await rec.finish(); } catch (e) { this.err = e; }
+        capturer = null;
+        $('export-label').textContent = restLabel;
+        if (!blob) showExportNote('Não consegui gerar o MP4 nesta resolução — tente 2K ou Nativo.');
+        return { blob, filename: baseName + '.mp4', engine: 'mp4' };
+      },
+    };
+  } catch { cap = null; } // WebCodecs ausente, ou nenhum tamanho H.264 realmente encoda
+  if (!cap) cap = makeWebmCapturer(restLabel, baseName);
   capturer = cap;
   $('export-label').textContent = 'Parar e salvar';
   return cap;

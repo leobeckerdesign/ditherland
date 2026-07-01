@@ -35,17 +35,48 @@ export function mp4CandidateSizes(w, h, floorLong = 640) {
   return out;
 }
 
-// Finds the largest supported (codec, size) for the requested dims, scaling down if the
-// encoder rejects the exact size. Returns { codec, width, height, bitrate } or null.
+// Real 1-frame encode test. VideoEncoder.isConfigSupported() is optimistic: hardware
+// encoders (e.g. NVENC via Media Foundation) can approve a config that then FAILS at real
+// encode time — which is exactly what dead-ends the export at "Falha ao gerar o MP4".
+// This actually configures, encodes one frame and flushes; only a real success counts.
+async function canEncode(codec, w, h, bitrate, fps) {
+  if (typeof VideoEncoder === 'undefined' || typeof VideoFrame === 'undefined') return false;
+  let enc = null;
+  try {
+    return await new Promise(resolve => {
+      let settled = false;
+      const finish = ok => { if (!settled) { settled = true; resolve(ok); } };
+      try {
+        enc = new VideoEncoder({ output: () => finish(true), error: () => finish(false) });
+        enc.configure({ codec, width: w, height: h, bitrate, framerate: fps });
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const frame = new VideoFrame(c, { timestamp: 0 });
+        try { enc.encode(frame, { keyFrame: true }); } finally { frame.close(); }
+        enc.flush().then(() => finish(true)).catch(() => finish(false));
+      } catch { finish(false); }
+      setTimeout(() => finish(false), 4000); // backstop against a hung configure
+    });
+  } finally {
+    try { if (enc && enc.state !== 'closed') enc.close(); } catch { /* already gone */ }
+  }
+}
+
+// Finds the largest (codec, size) that the browser can ACTUALLY encode, scaling down if
+// needed. Uses isConfigSupported as a cheap pre-filter, then a real encode test as the
+// authority. Returns { codec, width, height, bitrate } or null.
 async function negotiate(width, height, fps) {
   if (typeof VideoEncoder === 'undefined' || !VideoEncoder.isConfigSupported) return null;
   for (const [w, h] of mp4CandidateSizes(width, height)) {
     const bitrate = chooseBitrate(w, h, fps);
     for (const codec of CODECS) {
+      let approved = false;
       try {
         const r = await VideoEncoder.isConfigSupported({ codec, width: w, height: h, bitrate, framerate: fps });
-        if (r && r.supported) return { codec, width: w, height: h, bitrate };
-      } catch { /* try next profile/size */ }
+        approved = !!(r && r.supported);
+      } catch { approved = false; }
+      if (approved && await canEncode(codec, w, h, bitrate, fps)) {
+        return { codec, width: w, height: h, bitrate };
+      }
     }
   }
   return null;
