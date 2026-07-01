@@ -60,6 +60,23 @@
         </button>
       </div>
 
+      <p id="export-note" class="mt-1 text-xs text-primary/70" style="display:none"></p>
+
+      <!-- Resolução de saída (Nativo | 2K | 4K) — vale pra imagem, vídeo e gerador. Lado maior: 2K=2560, 4K=3840, aspect preservado. -->
+      <div class="overflow-hidden rounded border">
+        <div class="flex items-center justify-between border-b p-2 text-sm">
+          <div class="flex items-center text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 9V2h7m5 12l8 8M2 2l8 8m12 5v7h-7M2 15v7h7m5-12l8-8M2 22l8-8m12-5V2h-7"/></svg>
+            <span class="ml-2">Resolução</span>
+          </div>
+        </div>
+        <div id="res-group" role="group" class="grid grid-cols-3 gap-2 p-2">
+          <button type="button" data-value="native" data-state="on" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-4 border border-border cursor-pointer text-sm rounded-sm vst-btn">Nativo</button>
+          <button type="button" data-value="2k" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-4 border border-border cursor-pointer text-sm rounded-sm vst-btn">2K</button>
+          <button type="button" data-value="4k" data-state="off" class="dl-grpbtn inline-flex items-center justify-center font-medium data-[state=on]:bg-accent data-[state=on]:text-accent-foreground bg-transparent h-7 px-4 border border-border cursor-pointer text-sm rounded-sm vst-btn">4K</button>
+        </div>
+      </div>
+
       <!-- Vídeo: carregar um fundo pra compor atrás do vídeo ditherizado (transparência por banda ∅, igual ao Gerador). Visível só no modo Vídeo. -->
       <div id="video-bg-controls" style="display:none" class="grid grid-cols-2 gap-2">
         <button id="load-bg" class="inline-flex items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 vst-btn relative">
