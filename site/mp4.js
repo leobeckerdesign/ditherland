@@ -44,15 +44,17 @@ async function canEncode(codec, w, h, bitrate, fps) {
   let enc = null;
   try {
     return await new Promise(resolve => {
-      let settled = false;
+      let settled = false, gotChunk = false;
       const finish = ok => { if (!settled) { settled = true; resolve(ok); } };
       try {
-        enc = new VideoEncoder({ output: () => finish(true), error: () => finish(false) });
+        // success ONLY if a real encoded chunk comes out — flush() can resolve before an async
+        // encoder error fires, so "flush resolved" alone is a false positive on some hardware.
+        enc = new VideoEncoder({ output: () => { gotChunk = true; finish(true); }, error: () => finish(false) });
         enc.configure({ codec, width: w, height: h, bitrate, framerate: fps });
         const c = document.createElement('canvas'); c.width = w; c.height = h;
         const frame = new VideoFrame(c, { timestamp: 0 });
         try { enc.encode(frame, { keyFrame: true }); } finally { frame.close(); }
-        enc.flush().then(() => finish(true)).catch(() => finish(false));
+        enc.flush().then(() => finish(gotChunk)).catch(() => finish(false));
       } catch { finish(false); }
       setTimeout(() => finish(false), 4000); // backstop against a hung configure
     });

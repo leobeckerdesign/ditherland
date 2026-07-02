@@ -65,6 +65,15 @@ check(capG4k.size > 0, `gen 4k capture DEAD-ENDED (size 0): ${JSON.stringify(cap
 check(['mp4', 'webm'].includes(capG4k.engine), `gen 4k unexpected engine: ${capG4k.engine}`);
 check(capG4k.type === (capG4k.engine === 'mp4' ? 'video/mp4' : 'video/webm'), `gen 4k type/engine mismatch: ${JSON.stringify(capG4k)}`);
 
+// Safety net: if the MP4 encoder dies, the parallel WebM must still produce a real file.
+await page.evaluate(() => window.__ditherland.setOutRes('native'));
+await page.evaluate(() => window.__ditherland.__forceMp4Fail(true));
+await sleep(300);
+const capFail = await page.evaluate(() => window.__ditherland.captureMs(1200));
+await page.evaluate(() => window.__ditherland.__forceMp4Fail(false));
+check(capFail.engine === 'webm', `forced mp4-fail should yield webm, got: ${JSON.stringify(capFail)}`);
+check(capFail.size > 0, `webm safety net produced empty file: ${JSON.stringify(capFail)}`);
+
 await browser.close();
 check(errors.length === 0, `pageerrors: ${JSON.stringify(errors)}`);
 

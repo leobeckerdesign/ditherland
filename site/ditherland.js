@@ -47,6 +47,7 @@ let imgSource = null, vidSource = null; // kept per-mode so the image isn't lost
 let rafId = 0;
 let capturer = null;         // active export capture session (mp4 or webm) or null
 let exportPreparing = false; // guards the async start of a capture
+let debugForceMp4Fail = false; // test hook: force the MP4 path to fail to exercise the WebM safety net
 let curvePoints = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
 let curveLUT = buildCurveLUT(curvePoints);
 const S = {};                 // named custom sliders (brightness/contrast/scale)
@@ -378,6 +379,9 @@ async function beginCapture() {
     const capCanvas = document.createElement('canvas');
     capCanvas.width = rec.width; capCanvas.height = rec.height;
     const capCtx = capCanvas.getContext('2d'); capCtx.imageSmoothingEnabled = false;
+    // Safety net: record WebM in parallel. If the MP4 encoder dies mid-stream (some hardware
+    // encoders pass the 1-frame probe then fail the real stream), we still deliver a file.
+    const backup = startWebmBackup();
     cap = {
       active: true, engine: 'mp4', width: rec.width, height: rec.height,
       t0: performance.now(), lastGrab: -1e9, err: null,
@@ -394,12 +398,18 @@ async function beginCapture() {
       async stop() {
         this.active = false;
         $('export-label').textContent = 'Salvando…';
-        let blob = null;
-        try { blob = await rec.finish(); } catch (e) { this.err = e; }
+        let mp4Blob = null;
+        if (debugForceMp4Fail) this.err = new Error('forced-fail (debug)');
+        else { try { mp4Blob = await rec.finish(); } catch (e) { this.err = e; } }
+        const webmBlob = await backup.stop();
         capturer = null;
         $('export-label').textContent = restLabel;
-        if (!blob) showExportNote('Não consegui gerar o MP4 nesta resolução — tente 2K ou Nativo.');
-        return { blob, filename: baseName + '.mp4', engine: 'mp4' };
+        if (mp4Blob && mp4Blob.size > 0) return { blob: mp4Blob, filename: baseName + '.mp4', engine: 'mp4' };
+        // MP4 failed → deliver the WebM recorded in parallel (guaranteed file), surface the real error
+        const detail = this.err ? ` (${this.err.message || this.err})` : '';
+        console.warn('[ditherland] MP4 falhou em', rec.width + '×' + rec.height, '→ WebM.', this.err || '');
+        showExportNote(`MP4 falhou em ${rec.width}×${rec.height}${detail} — salvei em WebM.`);
+        return { blob: webmBlob, filename: baseName + '.webm', engine: 'webm' };
       },
     };
   } catch { cap = null; } // WebCodecs ausente, ou nenhum tamanho H.264 realmente encoda
@@ -407,6 +417,29 @@ async function beginCapture() {
   capturer = cap;
   $('export-label').textContent = 'Parar e salvar';
   return cap;
+}
+
+// Records WebM off the composite canvas in parallel with an MP4 capture — the guaranteed-file
+// safety net. stop() always resolves with a Blob (possibly empty if MediaRecorder is unavailable).
+function startWebmBackup() {
+  let rec = null; const chunks = []; let resolveStop = null;
+  const makeBlob = () => new Blob(chunks, { type: 'video/webm' });
+  try {
+    const stream = display.captureStream(EXPORT_FPS);
+    rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => { if (resolveStop) resolveStop(makeBlob()); };
+    rec.start();
+  } catch { rec = null; }
+  return {
+    stop() {
+      return new Promise(resolve => {
+        if (!rec || rec.state === 'inactive') return resolve(makeBlob());
+        resolveStop = resolve;
+        try { rec.stop(); } catch { resolve(makeBlob()); }
+      });
+    },
+  };
 }
 
 // Fallback: MediaRecorder/WebM. captureStream feeds frames automatically, so grab() is a no-op.
@@ -635,6 +668,7 @@ window.__ditherland.video = {
   setAlpha: (i, on) => { const b = $('alpha' + i); if (b) { b.setAttribute('data-state', on ? 'on' : 'off'); triggerRender(); } },
 };
 window.__ditherland.displaySize = () => [display.width, display.height];
+window.__ditherland.__forceMp4Fail = v => { debugForceMp4Fail = !!v; }; // test-only: exercise WebM safety net
 window.__ditherland.setOutRes = mode => {
   document.querySelectorAll('#res-group button').forEach(x => x.setAttribute('data-state', x.dataset.value === mode ? 'on' : 'off'));
   triggerRender();
@@ -644,10 +678,11 @@ window.__ditherland.setOutRes = mode => {
 window.__ditherland.captureMs = async (ms, wantBytes = false) => {
   const cap = await beginCapture();
   if (!cap) return { engine: 'none', type: '', size: 0, width: 0, height: 0 };
-  const engine = cap.engine, width = cap.width || display.width, height = cap.height || display.height;
+  const width = cap.width || display.width, height = cap.height || display.height;
   await new Promise(r => setTimeout(r, ms));
-  const { blob } = await cap.stop();
-  const out = { engine, type: blob ? blob.type : '', size: blob ? blob.size : 0, width, height };
+  const res = await cap.stop();          // engine can flip mp4 -> webm if the MP4 encoder died
+  const blob = res && res.blob;
+  const out = { engine: res ? res.engine : 'none', type: blob ? blob.type : '', size: blob ? blob.size : 0, width, height };
   if (wantBytes && blob) out.bytes = Array.from(new Uint8Array(await blob.arrayBuffer()));
   return out;
 };
